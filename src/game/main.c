@@ -1,15 +1,14 @@
-#include <iostream>
-
 #include <raylib.h>
+#include <server.h>
 
-int main() {
-  std::cout << "Hello, World!\n";
-
-  InitWindow(1280, 720, "game");
+int main(void) {
+  InitWindow(1280, 720, "GamblingGladiator");
 
   while(!WindowShouldClose()) {
     BeginDrawing();
     ClearBackground(BLUE);
     EndDrawing();
   }
+
+  CloseWindow();
 }

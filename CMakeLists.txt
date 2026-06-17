@@ -15,9 +15,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(RAYLIB REQUIRED IMPORTED_TARGET raylib)
 pkg_check_modules(ENET REQUIRED IMPORTED_TARGET libenet)
 
-add_subdirectory(src)
+add_subdirectory(src/network/client)
+add_subdirectory(src/network/server)
+add_subdirectory(src/dedicated_server)
+add_subdirectory(src/game)
+
