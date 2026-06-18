@@ -8,7 +8,6 @@ SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
 	list(APPEND PLATFORM_LIBS m)
-	list(APPEND PLATFORM_LIBS glfw)
 endif()
 
 target_link_libraries(${Name}

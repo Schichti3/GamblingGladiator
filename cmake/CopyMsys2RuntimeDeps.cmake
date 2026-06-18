@@ -7,7 +7,7 @@ if(NOT DEFINED OUT_DIR)
 endif()
 
 find_program(LDD_EXECUTABLE
-    NAMES mingw-ldd.exe mingw-ldd ldd.exe ldd 
+    NAMES ldd.exe ldd 
     PATHS
         "$ENV{MSYS2_ROOT}/ucrt64/bin"
         "$ENV{MSYS2_ROOT}/usr/bin"
