@@ -1,0 +1,57 @@
+SET(Name "gambling-gladiator-dll")
+
+add_library(${Name} SHARED
+  gambling_gladiator_dll.c
+)
+
+target_include_directories(${Name}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ../include
+)
+
+set_target_properties(${Name} PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+SET(PLATFORM_LIBS)
+
+if(UNIX AND NOT APPLE)
+    set_property(TARGET PkgConfig::RAYLIB APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES m
+    )
+endif()
+
+target_link_libraries(${Name} PRIVATE
+    gambling-gladiator-client
+    gambling-gladiator-server
+	  PkgConfig::RAYLIB
+)
+
+target_compile_options(${Name}
+  PRIVATE
+    $<$<C_COMPILER_ID:Clang,GNU>:-Wall -Wextra -Wpedantic>
+)
+
+if(WIN32 AND MINGW)
+    add_custom_command(TARGET ${Name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -DEXE_PATH="$<TARGET_FILE:${Name}>"
+            -DOUT_DIR="$<TARGET_FILE_DIR:${Name}>"
+            -P "${CMAKE_SOURCE_DIR}/cmake/CopyMsys2RuntimeDeps.cmake"
+        COMMENT "Copying MSYS2/UCRT64 runtime DLLs"
+    )
+endif()
+
+install(TARGETS ${Name}
+  LIBRARY DESTINATION bin
+  RUNTIME DESTINATION bin
+)
+
+if(WIN32 AND MINGW)
+    install(DIRECTORY "$<TARGET_FILE_DIR:${Name}>/"
+        DESTINATION bin
+        FILES_MATCHING
+            PATTERN "*.dll"
+    )
+endif()

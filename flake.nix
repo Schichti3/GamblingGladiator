@@ -46,11 +46,6 @@
             raylib
           ];
 
-          cmakeFlags = [
-            "-G Ninja"
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-          ];
-
           meta.mainProgram = "gambling-gladiator";
         };
       });

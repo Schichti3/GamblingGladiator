@@ -4,6 +4,12 @@ add_executable(${Name}
   main.c
 )
 
+target_include_directories(${Name}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ../include
+)
+
 SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
@@ -12,11 +18,10 @@ if(UNIX AND NOT APPLE)
     )
 endif()
 
-target_link_libraries(${Name}
-  PRIVATE
+target_link_libraries(${Name} PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
-	PkgConfig::RAYLIB
+	  PkgConfig::RAYLIB
 )
 
 target_compile_options(${Name}

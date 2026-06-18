@@ -25,5 +25,6 @@ pkg_check_modules(ENET REQUIRED IMPORTED_TARGET libenet)
 add_subdirectory(src/network/client)
 add_subdirectory(src/network/server)
 add_subdirectory(src/dedicated_server)
-add_subdirectory(src/game)
+add_subdirectory(src/game/dll)
+add_subdirectory(src/game/exe)
 
