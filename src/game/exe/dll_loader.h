@@ -2,8 +2,8 @@
 #define _DLL_LOADER_H_
 
 #include <stdint.h>
-
 #ifdef _WIN32
+  #define WIN32_LEAN_AND_MEAN
   #include <windows.h>
 
   #define GAME_LIB_PATH "gambling-gladiator-dll.dll"
