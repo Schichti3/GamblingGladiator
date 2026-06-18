@@ -10,14 +10,11 @@ target_link_libraries(${Name}
   PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
+	PkgConfig::RAYLIB
 )
 
 if(UNIX AND NOT APPLE)
-	target_link_libraries(${Name} 
-	  PRIVATE
-	  m
-	  PkgConfig::RAYLIB
-	)
+	target_link_libraries(${Name} PRIVATE m)
 endif()
 
 target_compile_options(${Name}
