@@ -2,7 +2,6 @@
 #include "error_codes.h"
 #include "server_config.h"
 
-#include <enet/enet.h>
 #include <stdio.h>
 
 Error_Code server_run(void) {
@@ -34,26 +33,14 @@ Error_Code server_run(void) {
     while (enet_host_service(server, &event, 1000)) {
       switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT: {
-          char client_ip[32] = {0};
-          if (enet_address_get_host_ip(&event.peer->address, client_ip, 32) == 0) {
-             printf("Client connected from %s:%u\n",
-                    client_ip,
-                    event.peer->address.port
-             );
-          }
+          log_client_connected(&event);
           break;
         }
         case ENET_EVENT_TYPE_RECEIVE:
           printf("Packet received\n");
           break;
         case ENET_EVENT_TYPE_DISCONNECT: {
-          char client_ip[32] = {0};
-          if (enet_address_get_host_ip(&event.peer->address, client_ip, 32) == 0) {
-             printf("Client from %s:%u disconnected\n",
-                    client_ip,
-                    event.peer->address.port
-             );
-          }
+          log_client_disconnected(&event);  
           break;
         }
         case ENET_EVENT_TYPE_NONE:
@@ -65,4 +52,24 @@ Error_Code server_run(void) {
   enet_host_destroy(server);
 
   return ALL_GOOD;
+}
+
+void log_client_connected(ENetEvent* event) {
+  char client_ip[32] = {0};
+  if (enet_address_get_host_ip(&event->peer->address, client_ip, 32) == 0) {
+    printf("Client connected from %s:%u\n",
+           client_ip,
+           event->peer->address.port
+    );
+  }
+}
+
+void log_client_disconnected(ENetEvent* event) {
+  char client_ip[32] = {0};
+  if (enet_address_get_host_ip(&event->peer->address, client_ip, 32) == 0) {
+    printf("Client from %s:%u disconnected\n",
+           client_ip,
+           event->peer->address.port
+    );
+  }
 }
