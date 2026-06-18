@@ -4,16 +4,19 @@ add_executable(${Name}
   main.c
 )
 
-target_link_libraries(${Name}
-  PRIVATE
-    PkgConfig::RAYLIB
-    gambling-gladiator-client
-    gambling-gladiator-server
-)
+SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(gambling-gladiator PRIVATE m)
+	list(append PLATFORM_LIBS m)
 endif()
+
+target_link_libraries(${Name}
+  PRIVATE
+    gambling-gladiator-client
+    gambling-gladiator-server
+	PkgConfig::RAYLIB
+	${PLATFORM_LIBS}
+)
 
 target_compile_options(${Name}
   PRIVATE
