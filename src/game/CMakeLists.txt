@@ -7,7 +7,7 @@ add_executable(${Name}
 SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
-	list(append PLATFORM_LIBS m)
+	list(APPEND PLATFORM_LIBS m)
 endif()
 
 target_link_libraries(${Name}
