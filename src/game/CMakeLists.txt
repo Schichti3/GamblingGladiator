@@ -11,6 +11,10 @@ target_link_libraries(${Name}
     gambling-gladiator-server
 )
 
+if(UNIX AND NOT APPLE)
+    target_link_libraries(gambling-gladiator PRIVATE m)
+endif()
+
 target_compile_options(${Name}
   PRIVATE
     $<$<C_COMPILER_ID:Clang,GNU>:-Wall -Wextra -Wpedantic>
