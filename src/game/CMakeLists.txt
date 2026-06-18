@@ -15,8 +15,8 @@ target_link_libraries(${Name}
 if(UNIX AND NOT APPLE)
 	target_link_libraries(${Name} 
 	  PRIVATE
-	  PkgConfig::RAYLIB
 	  m
+	  PkgConfig::RAYLIB
 	)
 endif()
 
