@@ -7,14 +7,13 @@ add_executable(${Name}
 SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
-	list(APPEND PLATFORM_LIBS m)
+	target_link_libraries(${Name} PRIVATE m)
 endif()
 
 target_link_libraries(${Name}
   PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
-	${PLATFORM_LIBS}
 	PkgConfig::RAYLIB
 )
 
