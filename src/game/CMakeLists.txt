@@ -6,16 +6,18 @@ add_executable(${Name}
 
 SET(PLATFORM_LIBS)
 
+if(UNIX AND NOT APPLE)
+    set_property(TARGET PkgConfig::RAYLIB APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES m
+    )
+endif()
+
 target_link_libraries(${Name}
   PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
 	PkgConfig::RAYLIB
 )
-
-if(UNIX AND NOT APPLE)
-	target_link_libraries(${Name} PRIVATE m)
-endif()
 
 target_compile_options(${Name}
   PRIVATE
