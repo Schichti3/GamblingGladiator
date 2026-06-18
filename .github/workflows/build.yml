@@ -1,0 +1,196 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  RAYLIB_VERSION: 5.5
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC Release
+            os: ubuntu-latest
+            configure_preset: linux-release
+            build_preset: linux-release
+            build_dir: build/linux-release
+            install_dir: dist/linux-release
+            artifact_name: linux-release
+
+          - name: Windows MSYS2 UCRT GCC Release
+            os: windows-latest
+            configure_preset: mingw-gcc-ucrt-release
+            build_preset: mingw-gcc-ucrt-release
+            build_dir: build/mingw-gcc-ucrt-release
+            install_dir: dist/mingw-gcc-ucrt-release
+            artifact_name: mingw-gcc-ucrt-release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # Linux dependencies
+      # -------------------------
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            g++ \
+            cmake \
+            ninja-build \
+            git \
+            pkg-config \
+            libenet-dev \
+            libasound2-dev \
+            mesa-common-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            xorg-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libxcursor-dev \
+            libxinerama-dev
+
+      - name: Build and install raylib on Linux
+        if: runner.os == 'Linux'
+        run: |
+          git clone --depth 1 --branch "$RAYLIB_VERSION" https://github.com/raysan5/raylib.git /tmp/raylib
+
+          cmake -S /tmp/raylib -B /tmp/raylib/build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_EXAMPLES=OFF
+
+          sudo cmake --build /tmp/raylib/build --target install --parallel
+          sudo ldconfig
+
+          echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+
+      # -------------------------
+      # Windows MSYS2 dependencies
+      # -------------------------
+      - name: Setup MSYS2
+        id: msys2
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-raylib
+            mingw-w64-ucrt-x86_64-enet
+            mingw-w64-ucrt-x86_64-python-mingw-ldd
+
+      - name: Export MSYS_ROOT
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $msysRoot = "${{ steps.msys2.outputs.msys2-location }}".Replace('\', '/')
+          "MSYS_ROOT=$msysRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "MSYS_ROOT=$msysRoot"
+
+      - name: Add ldd wrapper for MSYS2
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          printf '#!/usr/bin/env sh\nexec mingw-ldd "$@"\n' > /ucrt64/bin/ldd
+          chmod +x /ucrt64/bin/ldd
+
+      # -------------------------
+      # Dependency sanity checks
+      # -------------------------
+      - name: Check Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          gcc --version
+          g++ --version
+          cmake --version
+          ninja --version
+          pkg-config --version
+          pkg-config --modversion raylib
+          pkg-config --modversion libenet
+
+      - name: Check Windows dependencies
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          gcc --version
+          g++ --version
+          cmake --version
+          ninja --version
+          pkg-config --version
+          pkg-config --modversion raylib
+          pkg-config --modversion libenet
+
+          echo "MSYS_ROOT=$MSYS_ROOT"
+
+          command -v mingw-ldd
+          command -v ldd
+
+      # -------------------------
+      # Configure
+      # -------------------------
+      - name: Configure CMake on Linux
+        if: runner.os == 'Linux'
+        run: |
+          cmake --preset "${{ matrix.configure_preset }}"
+
+      - name: Configure CMake on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cmake --preset "${{ matrix.configure_preset }}"
+
+      # -------------------------
+      # Build
+      # -------------------------
+      - name: Build on Linux
+        if: runner.os == 'Linux'
+        run: |
+          cmake --build --preset "${{ matrix.build_preset }}"
+
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build --preset "${{ matrix.build_preset }}"
+
+      # -------------------------
+      # Install
+      # -------------------------
+      - name: Install on Linux
+        if: runner.os == 'Linux'
+        run: |
+          cmake --install "${{ matrix.build_dir }}" --prefix "${{ github.workspace }}/${{ matrix.install_dir }}"
+
+      - name: Install on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cmake --install "${{ matrix.build_dir }}" --prefix "${{ github.workspace }}/${{ matrix.install_dir }}"
+
+      # -------------------------
+      # Upload artifacts
+      # -------------------------
+      - name: Upload installed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.install_dir }}/
+          if-no-files-found: error
