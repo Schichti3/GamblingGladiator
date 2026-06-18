@@ -8,14 +8,15 @@ SET(PLATFORM_LIBS)
 
 if(UNIX AND NOT APPLE)
 	list(APPEND PLATFORM_LIBS m)
+	list(APPEND PLATFORM_LIBS glfw)
 endif()
 
 target_link_libraries(${Name}
   PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
-	PkgConfig::RAYLIB
 	${PLATFORM_LIBS}
+	PkgConfig::RAYLIB
 )
 
 target_compile_options(${Name}

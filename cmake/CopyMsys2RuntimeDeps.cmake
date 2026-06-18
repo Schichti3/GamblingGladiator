@@ -6,15 +6,13 @@ if(NOT DEFINED OUT_DIR)
     message(FATAL_ERROR "OUT_DIR is not defined")
 endif()
 
-find_program(LDD_EXECUTABLE ldd)
-
-if(NOT LDD_EXECUTABLE AND DEFINED ENV{MSYS2_ROOT})
-    find_program(LDD_EXECUTABLE
-        NAMES ldd ldd.exe
-        PATHS "$ENV{MSYS2_ROOT}/usr/bin"
-        NO_DEFAULT_PATH
-    )
-endif()
+find_program(LDD_EXECUTABLE
+    NAMES mingw-ldd.exe mingw-ldd ldd.exe ldd 
+    PATHS
+        "$ENV{MSYS2_ROOT}/ucrt64/bin"
+        "$ENV{MSYS2_ROOT}/usr/bin"
+    NO_DEFAULT_PATH
+)
 
 execute_process(
     COMMAND "${LDD_EXECUTABLE}" "${EXE_PATH}"
