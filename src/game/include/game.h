@@ -5,6 +5,7 @@
 
 typedef struct Game_State {
   Color background_color;
+  float x, y;
 } Game_State;
 
 #ifdef GAME_BUILD
