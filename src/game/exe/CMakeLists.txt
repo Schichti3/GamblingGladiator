@@ -11,8 +11,6 @@ target_include_directories(${Name}
     ../include
 )
 
-SET(PLATFORM_LIBS)
-
 if(UNIX AND NOT APPLE)
     set_property(TARGET PkgConfig::RAYLIB APPEND PROPERTY
       INTERFACE_LINK_LIBRARIES m
