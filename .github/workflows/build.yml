@@ -72,8 +72,7 @@ jobs:
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_EXAMPLES=OFF \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DBUILD_SHARED_LIBS=OFF
+            -DBUILD_SHARED_LIBS=ON
 
           sudo cmake --build /tmp/raylib/build --target install --parallel
           sudo ldconfig
