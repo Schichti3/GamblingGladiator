@@ -21,5 +21,5 @@ void game_update(Game_State* game_state) {
   if (IsKeyDown(KEY_D)) game_state->x += velocity;
 
   DrawRectangle(game_state->x, game_state->y, 100, 100, PURPLE);
-  DrawCircle(game_state->x, game_state->y, 100, 100, PURPLE);
+  // DrawCircle(game_state->x, game_state->y, 100, GREEN);
 }
