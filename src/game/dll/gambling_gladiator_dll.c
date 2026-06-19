@@ -11,6 +11,6 @@ void game_reload(Game_State* game_state) {
 }
 
 void game_update(Game_State* game_state) {
-  ClearBackground(BLACK);
+  ClearBackground(RED);
   DrawRectangle(10, 10, 100, 100, PURPLE);
 }

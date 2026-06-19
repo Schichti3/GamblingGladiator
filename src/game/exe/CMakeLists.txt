@@ -2,6 +2,7 @@ SET(Name "gambling-gladiator")
 
 add_executable(${Name}
   main.c
+  dll_loader.c
 )
 
 target_include_directories(${Name}
