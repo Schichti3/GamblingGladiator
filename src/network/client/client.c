@@ -26,7 +26,7 @@ Error_Code client_connect(void) {
     0
   );
 
-  if (client == NULL) {
+  if (!client) {
     return CLIENT_CREATION_FAILED;
   }
 
@@ -42,7 +42,7 @@ Error_Code client_connect(void) {
     0
   );
 
-  if (server == NULL) {
+  if (!server) {
     enet_host_destroy(client);
     printf("Creating connection failed\n");
     return CLIENT_CREATING_CONNECTION_FAILED;
@@ -58,12 +58,27 @@ Error_Code client_connect(void) {
     printf("Connection failed\n");
     enet_peer_reset(server);
     enet_host_destroy(client);
+    server = NULL;
+    client = NULL;
     return CLIENT_CREATING_CONNECTION_FAILED;
   }
 
   enet_host_flush(client);
 
   return ALL_GOOD;
+}
+
+Error_Code client_send(void* data, uint32_t data_len) {
+  if (!client) return CLIENT_SEND_FAILED_NO_CLIENT;
+  if (!server) return CLIENT_SEND_FAILED_NO_SERVER;
+  ENetPacket* packet = enet_packet_create(data, data_len, ENET_PACKET_FLAG_RELIABLE);
+  int res = enet_peer_send(server, 0, packet);
+  enet_host_flush(client);
+  if (res == 0) {
+    return ALL_GOOD;
+  } else {
+    return CLIENT_SEND_FAILED;
+  }
 }
 
 
