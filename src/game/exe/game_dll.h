@@ -43,9 +43,18 @@ static int load_game_code(Game_Code* game_code) {
   Lib new_lib = open_lib(temp_path);
   if (!new_lib) return 0;
 
+  #if defined(__GNUC__) || defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpedantic"
+  #endif
+
   game_init_t init = (game_init_t)load_symbol(new_lib, "game_init");
   game_reload_t reload = (game_reload_t)load_symbol(new_lib, "game_reload");
   game_update_t update = (game_update_t)load_symbol(new_lib, "game_update");
+
+  #if defined(__GNUC__) || defined(__clang__)
+    #pragma GCC diagnostic pop
+  #endif
 
   if (!init || !reload || !update) {
     close_lib(new_lib);

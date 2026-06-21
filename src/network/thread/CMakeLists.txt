@@ -1,9 +1,8 @@
-SET(Name "gambling-gladiator-server")
+SET(Name "thread")
 
 add_library(${Name}
   STATIC
-  server.c
-  server_config.c
+  thread.c
 )
 
 target_include_directories(${Name}
@@ -12,11 +11,9 @@ target_include_directories(${Name}
     ../include
 )
 
-target_link_libraries(${Name}
-  PUBLIC
-    thread
-    PkgConfig::ENET
-)
+if(UNIX AND NOT APPLE)
+  target_link_libraries(${Name} PUBLIC pthread)
+endif()
 
 target_compile_options(${Name}
   PRIVATE
@@ -28,7 +25,6 @@ install(TARGETS ${Name}
 )
 
 install(FILES
-  server_config.h
-  server.h
-  DESTINATION include/gambling-gladiator/server
+  thread.h
+  DESTINATION include/gambling-gladiator/thread
 )

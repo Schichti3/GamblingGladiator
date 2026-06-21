@@ -14,6 +14,7 @@ target_include_directories(${Name}
 
 target_link_libraries(${Name}
   PUBLIC
+    thread
     PkgConfig::ENET
 )
 
