@@ -1,4 +1,4 @@
-SET(Name "gambling-gladiator-decicated-server")
+SET(Name "gambling-gladiator-dedicated-server")
 
 add_executable(${Name}
   main.c
