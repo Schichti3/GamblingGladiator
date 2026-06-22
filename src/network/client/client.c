@@ -2,12 +2,28 @@
 #include "client_config.h"
 #include "error_codes.h"
 
+#include <thread.h>
+
 #include <enet/enet.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdatomic.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 static ENetHost* client;
 static ENetPeer* server;
+
+static atomic_bool mainloop_running;
+static Thread_Handle mainloop_thread_handle;
+
+#define MAX_MSG_BUF_SIZE 64
+
+typedef struct Msg_Buf {
+  Msg buf[MAX_MSG_BUF_SIZE];
+  uint16_t msg_count;
+} Msg_Buf;
+
+static Msg_Buf msg_buf = {0};
 
 Error_Code client_connect(void) {
   Client_Config* conf = get_client_config();
@@ -81,4 +97,66 @@ Error_Code client_send(void* data, uint32_t data_len) {
   }
 }
 
+static void* mainloop(void* args) {
+  ENetEvent event;
+  while (mainloop_running) {
+    if (enet_host_service(client, &event, 5000) > 0) {
+      switch(event.type) {
+        case ENET_EVENT_TYPE_CONNECT:
+          //TODO add connection established info in game? maybe some kind of popup / notification
+          break;
+        case ENET_EVENT_TYPE_RECEIVE:
+          break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+          break;
+        case ENET_EVENT_TYPE_NONE:
+          break;
+      }
+    }
+  }
+}
 
+Error_Code client_start_mainloop(void) {
+  if (atomic_load(&mainloop_running) == true) {
+    return CLIENT_MAINLOOP_ALREADY_RUNNING;
+  }
+  atomic_store(&mainloop_running, true);
+  Thread_Handle handle;
+  Thread_Error res = thread_run(mainloop, 0, &handle);
+  if (res != THREAD_SUCCESS) {
+    mainloop_thread_handle = 0;
+    atomic_store(&mainloop_running, false);
+    return CLIENT_MAINLOOP_START_FAILED;
+  }
+
+  mainloop_thread_handle = handle;
+  return ALL_GOOD;
+}
+
+Error_Code client_stop_mainloop(void) {
+  atomic_store(&mainloop_running, false);
+  if (thread_join(mainloop_thread_handle) != THREAD_SUCCESS) {
+    return CLIENT_MAINLOOP_STOP_FAILED;
+  }
+  return ALL_GOOD;
+}
+
+bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
+  if (msg_buf.msg_count == 0) {
+    return false;
+  }
+
+  msgs = malloc(sizeof(Msg) * msg_buf.msg_count);
+  *msg_count = msg_buf.msg_count;
+
+  for (int i = 0; i < msg_buf.msg_count; ++i) {
+    msgs[i] = msg_buf.buf[i];
+  }
+
+  return true;
+}
+
+void client_free_msg(Msg* msg) {
+  free(msg->data);
+  free(msg);
+}
