@@ -1,8 +1,10 @@
 #include "server.h"
-#include "error_codes.h"
+#include <error_codes.h>
+#include <net_com_types.h>
 #include "server_config.h"
 
 #include <stdio.h>
+#include <string.h>
 
 Error_Code server_run(void) {
   Server_Config* conf = get_server_config();
@@ -38,9 +40,14 @@ Error_Code server_run(void) {
         }
         case ENET_EVENT_TYPE_RECEIVE:
           printf("Packet received\n");
+          Msg msg = {0};
+          memcpy(&msg, event.packet->data, event.packet->dataLength);
+          printf("type     from msg: %d\n", (int)msg.type );
+          printf("data_len from msg: %d\n", (int)msg.data_len );
+          printf("data     from msg: %s\n", msg.data );
           break;
         case ENET_EVENT_TYPE_DISCONNECT: {
-          log_client_disconnected(&event);  
+          log_client_disconnected(&event);
           break;
         }
         case ENET_EVENT_TYPE_NONE:

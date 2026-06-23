@@ -2,6 +2,7 @@
 #include "client_config.h"
 #include "error_codes.h"
 
+#include <pthread.h>
 #include <thread.h>
 
 #include <enet/enet.h>
@@ -21,10 +22,10 @@ static Thread_Handle mainloop_thread_handle;
 typedef struct Msg_Buf {
   Msg buf[MAX_MSG_BUF_SIZE];
   uint16_t msg_count;
-  pthread_mutex_t lock;
 } Msg_Buf;
 
-static Msg_Buf msg_buf = {.lock = PTHREAD_MUTEX_INITIALIZER};
+static Msg_Buf msg_buf = {0};
+pthread_mutex_t msg_buf_lock = PTHREAD_MUTEX_INITIALIZER;
 
 Error_Code client_connect(void) {
   Client_Config* conf = get_client_config();
@@ -85,10 +86,10 @@ Error_Code client_connect(void) {
   return ALL_GOOD;
 }
 
-Error_Code client_send(void* data, uint32_t data_len) {
+Error_Code client_send(Msg* msg) {
   if (!client) return CLIENT_SEND_FAILED_NO_CLIENT;
   if (!server) return CLIENT_SEND_FAILED_NO_SERVER;
-  ENetPacket* packet = enet_packet_create(data, data_len, ENET_PACKET_FLAG_RELIABLE);
+  ENetPacket* packet = enet_packet_create(msg, sizeof(Msg), ENET_PACKET_FLAG_RELIABLE);
   int res = enet_peer_send(server, 0, packet);
   enet_host_flush(client);
   if (res == 0) {
@@ -99,6 +100,7 @@ Error_Code client_send(void* data, uint32_t data_len) {
 }
 
 static void* mainloop(void* args) {
+  (void)args;
   ENetEvent event;
   while (mainloop_running) {
     if (enet_host_service(client, &event, 5000) > 0) {
@@ -107,9 +109,9 @@ static void* mainloop(void* args) {
           //TODO add connection established info in game? maybe some kind of popup / notification
           break;
         case ENET_EVENT_TYPE_RECEIVE:
-          pthread_mutex_lock(&msg_buf.lock);
+          pthread_mutex_lock(&msg_buf_lock);
           //do stuff / TODO add msg to bsg_buf
-          pthread_mutex_unlock(&msg_buf.lock);
+          pthread_mutex_unlock(&msg_buf_lock);
           break;
         case ENET_EVENT_TYPE_DISCONNECT:
           break;
@@ -118,6 +120,7 @@ static void* mainloop(void* args) {
       }
     }
   }
+  return 0;
 }
 
 Error_Code client_start_mainloop(void) {
@@ -146,9 +149,9 @@ Error_Code client_stop_mainloop(void) {
 }
 
 bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
-  pthread_mutex_lock(&msg_buf.lock);
+  pthread_mutex_lock(&msg_buf_lock);
   if (msg_buf.msg_count == 0) {
-    pthread_mutex_unlock(&msg_buf.lock);
+    pthread_mutex_unlock(&msg_buf_lock);
     return false;
   }
 
@@ -159,11 +162,12 @@ bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
     msgs[i] = msg_buf.buf[i];
   }
 
-  pthread_mutex_unlock(&msg_buf.lock);
+  pthread_mutex_unlock(&msg_buf_lock);
   return true;
 }
 
 void client_free_msg(Msg* msg) {
-  free(msg->data);
-  free(msg);
+  (void)msg; //TODO maybe comment in again, depending on how I structure the code
+  // free(msg->data);
+  // free(msg);
 }
