@@ -1,6 +1,4 @@
 #include <thread.h>
-#include <pthread.h>
-
 
 Thread_Error thread_run(Thread_Func func, void* args, Thread_Handle* handle) {
   pthread_t thread;

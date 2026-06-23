@@ -21,9 +21,10 @@ static Thread_Handle mainloop_thread_handle;
 typedef struct Msg_Buf {
   Msg buf[MAX_MSG_BUF_SIZE];
   uint16_t msg_count;
+  pthread_mutex_t lock;
 } Msg_Buf;
 
-static Msg_Buf msg_buf = {0};
+static Msg_Buf msg_buf = {.lock = PTHREAD_MUTEX_INITIALIZER};
 
 Error_Code client_connect(void) {
   Client_Config* conf = get_client_config();
@@ -106,6 +107,9 @@ static void* mainloop(void* args) {
           //TODO add connection established info in game? maybe some kind of popup / notification
           break;
         case ENET_EVENT_TYPE_RECEIVE:
+          pthread_mutex_lock(&msg_buf.lock);
+          //do stuff / TODO add msg to bsg_buf
+          pthread_mutex_unlock(&msg_buf.lock);
           break;
         case ENET_EVENT_TYPE_DISCONNECT:
           break;
@@ -142,7 +146,9 @@ Error_Code client_stop_mainloop(void) {
 }
 
 bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
+  pthread_mutex_lock(&msg_buf.lock);
   if (msg_buf.msg_count == 0) {
+    pthread_mutex_unlock(&msg_buf.lock);
     return false;
   }
 
@@ -153,6 +159,7 @@ bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
     msgs[i] = msg_buf.buf[i];
   }
 
+  pthread_mutex_unlock(&msg_buf.lock);
   return true;
 }
 

@@ -1,6 +1,7 @@
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
+#include <pthread.h>
 #include <stdint.h>
 
 typedef enum Thread_Error {
