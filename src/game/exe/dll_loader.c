@@ -37,6 +37,10 @@
     if (lib) FreeLibrary(lib);
   }
 
+  void sleep(unsigned int ms) {
+    Sleep(ms);
+  }
+
 #endif
 
 #ifdef __unix__
@@ -83,5 +87,9 @@
 
   void close_lib(Lib lib) {
     if (lib) dlclose(lib);
+  }
+
+  void sleep(unsigned int ms) {
+    usleep(ms * 1000);
   }
 #endif

@@ -10,6 +10,7 @@
 typedef struct Game_Code {
   Lib lib;
   game_init_t init;
+  game_deinit_t deinit;
   game_reload_t reload;
   game_update_t update;
   uint64_t last_write_time;
@@ -23,6 +24,8 @@ static int load_game_code(Game_Code* game_code) {
   if (write_time == game_code->last_write_time && game_code->valid) {
     return 0;
   }
+
+  sleep(100);
 
   char temp_path[512];
   static uint64_t load_count = 0;
@@ -40,6 +43,10 @@ static int load_game_code(Game_Code* game_code) {
     return 0;
   }
 
+  if (game_code->valid) {
+    game_code->deinit();
+  }
+
   Lib new_lib = open_lib(temp_path);
   if (!new_lib) return 0;
 
@@ -49,6 +56,7 @@ static int load_game_code(Game_Code* game_code) {
   #endif
 
   game_init_t init = (game_init_t)load_symbol(new_lib, "game_init");
+  game_deinit_t deinit = (game_deinit_t)load_symbol(new_lib, "game_deinit");
   game_reload_t reload = (game_reload_t)load_symbol(new_lib, "game_reload");
   game_update_t update = (game_update_t)load_symbol(new_lib, "game_update");
 
@@ -56,7 +64,7 @@ static int load_game_code(Game_Code* game_code) {
     #pragma GCC diagnostic pop
   #endif
 
-  if (!init || !reload || !update) {
+  if (!init || !deinit || !reload || !update) {
     close_lib(new_lib);
     return 0;
   }
@@ -69,6 +77,7 @@ static int load_game_code(Game_Code* game_code) {
 
   game_code->lib = new_lib;
   game_code->init = init;
+  game_code->deinit = deinit;
   game_code->reload = reload;
   game_code->update = update;
   game_code->last_write_time = write_time;

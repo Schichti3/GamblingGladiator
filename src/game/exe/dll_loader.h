@@ -25,5 +25,6 @@ int      copy_lib(const char* src, const char* dst);
 Lib      open_lib(const char* path);
 void*    load_symbol(Lib lib, const char* name);
 void     close_lib(Lib lib);
+void     sleep(unsigned int ms);
 
 #endif //_DLL_LOADER_H_

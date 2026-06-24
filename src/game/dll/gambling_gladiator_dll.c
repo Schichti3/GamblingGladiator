@@ -10,6 +10,10 @@ void game_init(Game_State* game_state) {
   client_start_mainloop();
 }
 
+void game_deinit(void) {
+  client_stop_mainloop();
+}
+
 void game_reload(Game_State* game_state) {
   game_state->background_color = BLUE;
   client_connect();
@@ -26,7 +30,7 @@ void game_update(Game_State* game_state) {
   if (IsKeyDown(KEY_A)) game_state->x -= velocity;
   if (IsKeyDown(KEY_D)) game_state->x += velocity;
 
-  Msg msg = {.type = 1, .data_len = 6, .data = {'h', 'a', 'l', 'l', 'o', '\0'}};
+  Msg msg = {.type = 1, .data_len = 6, .data = {'B', 'a', 'l', 'i', 'a', '\0'}};
 
   if (IsKeyPressed(KEY_M)) client_send(&msg);
 

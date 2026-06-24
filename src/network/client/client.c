@@ -120,6 +120,8 @@ static void* mainloop(void* args) {
       }
     }
   }
+  enet_peer_disconnect(server, 0);
+  enet_peer_reset(server);
   return 0;
 }
 

@@ -19,10 +19,12 @@ typedef struct Game_State {
 #endif
 
 typedef void (*game_init_t)(Game_State* game_state);
+typedef void (*game_deinit_t)(void);
 typedef void (*game_reload_t)(Game_State* game_state);
 typedef void (*game_update_t)(Game_State* game_state);
 
 GAME_API void game_init(Game_State* game_state);
+GAME_API void game_deinit(void);
 GAME_API void game_reload(Game_State* game_state);
 GAME_API void game_update(Game_State* game_state);
 
