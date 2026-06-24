@@ -21,7 +21,16 @@
   }
 
   void* load_symbol(Lib lib, const char* name) {
+    #if defined(__GNUC__) || defined(__clang__)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wpedantic"
+    #endif
+
     return (void*)GetProcAddress(lib, name);
+
+    #if defined(__GNUC__) || defined(__clang__)
+      #pragma GCC diagnostic pop
+    #endif
   }
 
   void close_lib(Lib lib) {
