@@ -2,7 +2,7 @@
 
 static Server_Config server_config = {
   .port = 6969,
-  .ip = "127.0.0.1",
+  .ip = "0.0.0.0",
   .max_clients = 32,
   .channels = 2
 };

@@ -1,3 +1,5 @@
+#define NET_COM_FUNCTIONS
+#include <net_com.h>
 #include "client.h"
 #include "client_config.h"
 #include "error_codes.h"
