@@ -1,6 +1,6 @@
 #include "server.h"
 #include <error_codes.h>
-#include <net_com_types.h>
+#include <net_com.h>
 #include "server_config.h"
 
 #include <stdio.h>
@@ -36,6 +36,14 @@ Error_Code server_run(void) {
       switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT: {
           log_client_connected(&event);
+          const char* hello = "Greetings, client!";
+          Msg msg;
+          msg.type = 187;
+          strcpy(msg.data, hello);
+          msg.data_len = strlen(hello) + 1;
+          ENetPacket* packet = enet_packet_create(&msg, sizeof(Msg), ENET_PACKET_FLAG_RELIABLE);
+          enet_peer_send(event.peer, 0, packet);
+          enet_host_flush(server);
           break;
         }
         case ENET_EVENT_TYPE_RECEIVE:

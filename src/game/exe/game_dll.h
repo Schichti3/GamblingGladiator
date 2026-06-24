@@ -25,7 +25,7 @@ static int load_game_code(Game_Code* game_code) {
     return 0;
   }
 
-  sleep(100);
+  sleep_ms(100);
 
   char temp_path[512];
   static uint64_t load_count = 0;

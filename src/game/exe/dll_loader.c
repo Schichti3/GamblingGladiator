@@ -1,3 +1,7 @@
+#ifdef __unix__
+  #define _POSIX_C_SOURCE 199309L
+#endif
+
 #include <dll_loader.h>
 
 #ifdef _WIN32
@@ -37,7 +41,7 @@
     if (lib) FreeLibrary(lib);
   }
 
-  void sleep(unsigned int ms) {
+  void sleep_ms(unsigned int ms) {
     Sleep(ms);
   }
 
@@ -48,6 +52,7 @@
   #include <unistd.h>
   #include <dlfcn.h>
   #include <stdio.h>
+  #include <time.h>
 
   uint64_t get_file_time(const char* path) {
     struct stat st;
@@ -89,7 +94,10 @@
     if (lib) dlclose(lib);
   }
 
-  void sleep(unsigned int ms) {
-    usleep(ms * 1000);
+  void sleep_ms(unsigned int ms) {
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = ms * 1000 * 1000;
+    nanosleep(&ts, NULL);
   }
 #endif

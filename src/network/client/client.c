@@ -11,23 +11,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <ring_buf.h>
+
 static ENetHost* client;
 static ENetPeer* server;
 
 static atomic_bool mainloop_running;
 static Thread_Handle mainloop_thread_handle;
 
-#define MAX_MSG_BUF_SIZE 64
+STANDARD_RING_BUF_IMPL(Msg_Buf, Msg, 128)
 
-typedef struct Msg_Buf {
-  Msg buf[MAX_MSG_BUF_SIZE];
-  uint16_t msg_count;
-} Msg_Buf;
+Msg_Buf msg_buf = {0};
 
-static Msg_Buf msg_buf = {0};
 pthread_mutex_t msg_buf_lock = PTHREAD_MUTEX_INITIALIZER;
 
-Error_Code client_connect(void) {
+static Error_Code client_create(void) {
   Client_Config* conf = get_client_config();
 
   if (enet_initialize() != 0) {
@@ -66,23 +64,6 @@ Error_Code client_connect(void) {
     return CLIENT_CREATING_CONNECTION_FAILED;
   }
 
-  ENetEvent event;
-
-  // Wait up to 5 seconds for connection.
-  if (enet_host_service(client, &event, 5000) > 0 &&
-      event.type == ENET_EVENT_TYPE_CONNECT) {
-    printf("Connected to server\n");
-  } else {
-    printf("Connection failed\n");
-    enet_peer_reset(server);
-    enet_host_destroy(client);
-    server = NULL;
-    client = NULL;
-    return CLIENT_CREATING_CONNECTION_FAILED;
-  }
-
-  enet_host_flush(client);
-
   return ALL_GOOD;
 }
 
@@ -102,32 +83,41 @@ Error_Code client_send(Msg* msg) {
 static void* mainloop(void* args) {
   (void)args;
   ENetEvent event;
+  Msg msg;
   while (mainloop_running) {
     if (enet_host_service(client, &event, 5000) > 0) {
       switch(event.type) {
         case ENET_EVENT_TYPE_CONNECT:
           //TODO add connection established info in game? maybe some kind of popup / notification
+          printf("Connected to server\n");
           break;
         case ENET_EVENT_TYPE_RECEIVE:
+          packet_to_msg(&msg, event.packet);
           pthread_mutex_lock(&msg_buf_lock);
-          //do stuff / TODO add msg to bsg_buf
+          Msg_Buf_push(&msg_buf, msg);
           pthread_mutex_unlock(&msg_buf_lock);
           break;
         case ENET_EVENT_TYPE_DISCONNECT:
           break;
         case ENET_EVENT_TYPE_NONE:
+          printf("test\n");
           break;
       }
     }
   }
   enet_peer_disconnect(server, 0);
   enet_peer_reset(server);
+  enet_host_destroy(client);
   return 0;
 }
 
 Error_Code client_start_mainloop(void) {
   if (atomic_load(&mainloop_running) == true) {
     return CLIENT_MAINLOOP_ALREADY_RUNNING;
+  }
+  Error_Code client_creation = client_create();
+  if (client_creation != ALL_GOOD) {
+    return client_creation;
   }
   atomic_store(&mainloop_running, true);
   Thread_Handle handle;
@@ -147,29 +137,20 @@ Error_Code client_stop_mainloop(void) {
   if (thread_join(mainloop_thread_handle) != THREAD_SUCCESS) {
     return CLIENT_MAINLOOP_STOP_FAILED;
   }
+
   return ALL_GOOD;
 }
 
-bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count) {
+bool client_fetch_msgs(Msg* msgs, uint16_t* msg_count, uint16_t max_msg_count) {
+  *msg_count = 0;
+  Msg msg;
   pthread_mutex_lock(&msg_buf_lock);
-  if (msg_buf.msg_count == 0) {
-    pthread_mutex_unlock(&msg_buf_lock);
-    return false;
+  while (Msg_Buf_pop(&msg_buf, &msg)) {
+    *msgs = msg;
+    ++msgs;
+    if (++(*msg_count) == max_msg_count) break;
   }
-
-  msgs = malloc(sizeof(Msg) * msg_buf.msg_count);
-  *msg_count = msg_buf.msg_count;
-
-  for (int i = 0; i < msg_buf.msg_count; ++i) {
-    msgs[i] = msg_buf.buf[i];
-  }
-
   pthread_mutex_unlock(&msg_buf_lock);
-  return true;
-}
 
-void client_free_msg(Msg* msg) {
-  (void)msg; //TODO maybe comment in again, depending on how I structure the code
-  // free(msg->data);
-  // free(msg);
+  return (*msg_count) > 0;
 }
