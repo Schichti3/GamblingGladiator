@@ -1,0 +1,128 @@
+Client Tick and Server Tick Suggestion
+
+Implement client tick and server tick as two separate concepts:
+
+1. Server tick: authoritative fixed simulation.
+2. Client tick: local input processing, prediction, received-message handling, and rendering support.
+
+Server Tick
+
+The current server loop in src/network/server/server.c is event-driven and blocks here:
+
+  enet_host_service(server, &event, 1000)
+
+That timeout can block for up to one second, so it is not suitable for a real simulation tick.
+
+Use a fixed timestep server loop instead:
+
+  const double tick_rate = 60.0;
+  const double tick_dt = 1.0 / tick_rate;
+
+  double accumulator = 0;
+  double last = now_seconds();
+
+  while (server_running) {
+    double current = now_seconds();
+    accumulator += current - last;
+    last = current;
+
+    ENetEvent event;
+    while (enet_host_service(server, &event, 0) > 0) {
+      handle_server_event(&event);
+    }
+
+    while (accumulator >= tick_dt) {
+      server_tick(tick_dt);
+      accumulator -= tick_dt;
+    }
+
+    enet_host_flush(server);
+    sleep_a_little();
+  }
+
+The important part is polling ENet with timeout 0 so networking does not block simulation.
+
+Add a function like:
+
+  static void server_tick(float dt) {
+    // consume queued client inputs
+    // update authoritative game state
+    // send snapshots to clients
+  }
+
+Long-term, clients should not send final positions. They should send input commands:
+
+  MSG_CLIENT_INPUT
+  // sequence number, movement buttons, action state, aim state
+
+The server should answer with authoritative snapshots:
+
+  MSG_SERVER_SNAPSHOT
+  // server tick id, entity positions, health, state, etc.
+
+Client Tick
+
+The current game_update function in src/game/dll/gambling_gladiator_dll.c is render-frame driven.
+Rendering can stay there, but client simulation should use its own fixed timestep accumulator:
+
+  void game_update(Game_State* game_state) {
+    float frame_dt = GetFrameTime();
+
+    client_poll_received_messages();
+
+    accumulator += frame_dt;
+    while (accumulator >= CLIENT_DT) {
+      client_tick(game_state, CLIENT_DT);
+      accumulator -= CLIENT_DT;
+    }
+
+    render_interpolated_state(game_state, accumulator / CLIENT_DT);
+  }
+
+Add a function like:
+
+  static void client_tick(Game_State* game_state, float dt) {
+    // sample input
+    // send input message to server
+    // optionally apply local prediction
+    // reconcile with newest server snapshot
+  }
+
+Right now game_update directly changes game_state->x and game_state->y based on WASD.
+For multiplayer, move that movement logic into client_tick and treat it as input, not truth.
+
+Client Network Thread
+
+The client network loop in src/network/client/client.c currently blocks here:
+
+  enet_host_service(client, &event, 5000)
+
+That can block for up to five seconds, which hurts shutdown and responsiveness.
+Use a short timeout or non-blocking poll instead:
+
+  enet_host_service(client, &event, 0)
+
+or a small timeout such as 1 to 5 ms if the network loop remains in its own thread.
+
+Suggested Rates
+
+  SERVER_TICK_RATE = 60
+  CLIENT_TICK_RATE = 60
+  SNAPSHOT_RATE = 20
+
+That means:
+
+  - Server simulates at 60 Hz.
+  - Client processes input and prediction at 60 Hz.
+  - Server broadcasts snapshots at 20 Hz.
+  - Rendering can run independently at the current Raylib frame rate.
+
+Recommended Implementation Path
+
+1. Add a monotonic now_seconds() helper.
+2. Replace the blocking server event loop with a fixed-timestep loop.
+3. Add server_tick(float dt).
+4. Move local movement logic into client_tick(float dt).
+5. Add input and snapshot message types to src/network/include/net_com.h.
+6. Keep drawing in game_update, but stop using render FPS as the simulation clock.
+
