@@ -23,11 +23,15 @@ static Thread_Handle mainloop_thread_handle;
 
 STANDARD_RING_BUF_IMPL(Msg_Buf, Msg, 128)
 
-Msg_Buf msg_buf = {0};
+static Msg_Buf msg_buf;
 
-pthread_mutex_t msg_buf_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t msg_buf_lock;
 
 static Error_Code client_create(void) {
+
+  Msg_Buf_init(&msg_buf);
+  pthread_mutex_init(&msg_buf_lock, NULL);
+
   Client_Config* conf = get_client_config();
 
   if (enet_initialize() != 0) {
