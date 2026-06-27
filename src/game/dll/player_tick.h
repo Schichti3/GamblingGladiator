@@ -4,7 +4,8 @@
 #include <stdint.h>
 
 typedef struct Player_Tick {
-  uint32_t input_state; //bitmap
+  uint16_t key_state; //bitmap
+  uint16_t mouse_state; //bitmap
 } Player_Tick;
 
 void player_tick(float dt);

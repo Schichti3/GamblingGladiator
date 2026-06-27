@@ -38,7 +38,6 @@ void game_reload(Game_State* game_state) {
   client_start_mainloop();
 }
 
-
 void game_update(Game_State* game_state) {
   float dt = GetFrameTime();
 
@@ -52,24 +51,4 @@ void game_update(Game_State* game_state) {
   }
 
   render_game(game_state, tick_dt_accumulator / tick_dt);
-
-  ClearBackground(BLACK);
-
-  int velocity = 5;
-
-  if (IsKeyDown(KEY_W)) game_state->y -= velocity;
-  if (IsKeyDown(KEY_S)) game_state->y += velocity;
-  if (IsKeyDown(KEY_A)) game_state->x -= velocity;
-  if (IsKeyDown(KEY_D)) game_state->x += velocity;
-
-  const char* str = "salam alaikum";
-  Msg msg = {0};
-  msg.type = 1;
-  strcpy(msg.data, str);
-  msg.data_len = strlen(str) + 1;
-
-  if (IsKeyPressed(KEY_M)) client_send(&msg);
-
-  // DrawRectangle(game_state->x, game_state->y, 50, 50, PURPLE);
-  DrawCircle(game_state->x, game_state->y, 30, PURPLE);
 }
