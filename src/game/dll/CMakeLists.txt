@@ -2,6 +2,8 @@ SET(Name "gambling-gladiator-dll")
 
 add_library(${Name} SHARED
   gambling_gladiator_dll.c
+  game_renderer.c
+  player_tick.c
 )
 
 target_include_directories(${Name}

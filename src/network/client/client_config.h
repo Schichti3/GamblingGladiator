@@ -8,6 +8,7 @@ typedef struct {
   uint16_t     port;
   const char*  ip;
   uint8_t      max_channels;
+  double       tick_rate;
 } Client_Config;
 
 Client_Config* get_client_config(void);

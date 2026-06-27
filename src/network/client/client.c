@@ -15,6 +15,8 @@
 
 #include <ring_buf.h>
 
+Client_Config* client_config;
+
 static ENetHost* client;
 static ENetPeer* server;
 
@@ -22,17 +24,15 @@ static atomic_bool mainloop_running;
 static Thread_Handle mainloop_thread_handle;
 
 STANDARD_RING_BUF_IMPL(Msg_Buf, Msg, 128)
-
 static Msg_Buf msg_buf;
-
 static pthread_mutex_t msg_buf_lock;
 
+
 static Error_Code client_create(void) {
+  client_config = get_client_config();
 
   Msg_Buf_init(&msg_buf);
   pthread_mutex_init(&msg_buf_lock, NULL);
-
-  Client_Config* conf = get_client_config();
 
   if (enet_initialize() != 0) {
     return INITIALIZING_CLIENT_FAILED;
@@ -43,7 +43,7 @@ static Error_Code client_create(void) {
   client = enet_host_create(
     NULL,
     1,
-    conf->max_channels,
+    client_config->max_channels,
     0,
     0
   );
@@ -54,13 +54,13 @@ static Error_Code client_create(void) {
 
   ENetAddress address;
 
-  enet_address_set_host(&address, conf->ip);
-  address.port = conf->port;
+  enet_address_set_host(&address, client_config->ip);
+  address.port = client_config->port;
 
   server = enet_host_connect(
     client,
     &address,
-    conf->max_channels,
+    client_config->max_channels,
     0
   );
 
@@ -91,7 +91,7 @@ static void* mainloop(void* args) {
   ENetEvent event;
   Msg msg;
   while (mainloop_running) {
-    if (enet_host_service(client, &event, 5000) > 0) {
+    if (enet_host_service(client, &event, 1000) > 0) {
       switch(event.type) {
         case ENET_EVENT_TYPE_CONNECT:
           //TODO add connection established info in game? maybe some kind of popup / notification

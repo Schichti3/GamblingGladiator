@@ -1,12 +1,8 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
-#include <raylib.h>
-
-typedef struct Game_State {
-  Color background_color;
-  float x, y;
-} Game_State;
+#include <game_types.h>
+#include <stdint.h>
 
 #ifdef GAME_BUILD
   #ifdef _WIN32

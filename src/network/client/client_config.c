@@ -8,7 +8,8 @@
 static Client_Config client_config = {
   .port = 6969,
   .ip = "127.0.0.1",
-  .max_channels = 2
+  .max_channels = 2,
+  .tick_rate = 60
 };
 
 Client_Config* get_client_config(void) {
