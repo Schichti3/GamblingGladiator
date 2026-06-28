@@ -6,8 +6,6 @@ add_library(${Name}
   server_config.c
 )
 
-set_target_properties(${MyName} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 target_include_directories(${Name}
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
