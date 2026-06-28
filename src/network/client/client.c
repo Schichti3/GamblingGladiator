@@ -94,7 +94,6 @@ static void* mainloop(void* args) {
     if (enet_host_service(client, &event, 1000) > 0) {
       switch(event.type) {
         case ENET_EVENT_TYPE_CONNECT:
-          //TODO add connection established info in game? maybe some kind of popup / notification
           printf("Connected to server\n");
           break;
         case ENET_EVENT_TYPE_RECEIVE:

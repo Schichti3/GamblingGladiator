@@ -10,7 +10,8 @@
 static double tick_dt;
 static double tick_dt_accumulator;
 
-static Msg msgs[128];
+#define MAX_MSG_COUNT 128
+static Msg msgs[MAX_MSG_COUNT];
 static uint16_t msg_count;
 
 void game_init(Game_State* game_state) {
@@ -41,7 +42,7 @@ void game_reload(Game_State* game_state) {
 void game_update(Game_State* game_state) {
   float dt = GetFrameTime();
 
-  if (client_fetch_msgs(msgs, &msg_count, 128)) {
+  if (client_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
   }
 
   tick_dt_accumulator += dt;

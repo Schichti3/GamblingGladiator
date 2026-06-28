@@ -8,6 +8,7 @@ typedef struct Msg {
   uint16_t type;
   uint16_t data_len;
   char     data[128];
+  uint8_t  client_id;
 } Msg;
 
 #ifdef NET_COM_FUNCTIONS
