@@ -1,5 +1,8 @@
+#include "server_tick.h"
 #include <server.h>
-#include <stdio.h>
+#include <game_types.h>
+
+Player_Data player_data;
 
 #define MAX_MSG_COUNT 1024
 static Msg msgs[MAX_MSG_COUNT];
@@ -10,6 +13,10 @@ int main(void) {
   while (1) {
     if (server_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
 
+    }
+
+    if (false) {
+      server_tick(&player_data, 0.0);
     }
   }
   return 0;

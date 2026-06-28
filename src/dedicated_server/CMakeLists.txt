@@ -2,6 +2,13 @@ SET(Name "gambling-gladiator-dedicated-server")
 
 add_executable(${Name}
   main.c
+  server_tick.c
+)
+
+target_include_directories(${Name}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ../include
 )
 
 target_link_libraries(${Name}
