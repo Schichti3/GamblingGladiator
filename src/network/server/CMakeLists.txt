@@ -16,6 +16,7 @@ target_link_libraries(${Name}
   PUBLIC
     thread
     PkgConfig::ENET
+    os-utils
 )
 
 target_compile_options(${Name}

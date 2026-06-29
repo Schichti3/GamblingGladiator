@@ -2,7 +2,8 @@
   #define _POSIX_C_SOURCE 199309L
 #endif
 
-#include <dll_loader.h>
+#include <os_utils.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
   #include <windows.h>
@@ -45,6 +46,22 @@
     Sleep(ms);
   }
 
+  double time_now_ms(void) {
+    static LARGE_INTEGER freq;
+    static bool initialized = 0;
+
+    LARGE_INTEGER now;
+
+    if (!initialized) {
+      QueryPerformanceFrequency(&freq);
+      initialized = true;
+    }
+
+    QueryPerformanceCounter(&now);
+
+    return (double)now.QuadPart * 1000.0 /
+           (double)freq.QuadPart;
+  }
 #endif
 
 #ifdef __unix__
@@ -95,9 +112,18 @@
   }
 
   void sleep_ms(unsigned int ms) {
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = ms * 1000 * 1000;
+    struct timespec ts = {
+      .tv_sec  = 0,
+      .tv_nsec = ms * 1000 * 1000
+    };
     nanosleep(&ts, NULL);
+  }
+
+  double time_now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return ((double)ts.tv_sec * 1000) +
+           ((double)ts.tv_nsec / 1000000.0);
   }
 #endif

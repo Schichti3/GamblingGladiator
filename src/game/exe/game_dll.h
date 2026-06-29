@@ -1,11 +1,26 @@
 #ifndef _GAME_DLL_H_
 #define _GAME_DLL_H_
 
-#include <dll_loader.h>
+#include <os_utils.h>
 #include <game.h>
 
 #include <stdio.h>
 #include <stdint.h>
+
+#ifdef _WIN32
+  #define GAME_LIB_PATH "libgambling-gladiator-dll.dll"
+  #define TEMP_LIB_PATH_FORMAT "libgambling-gladiator-dll_temp_%llu_%llu.dll"
+#endif
+
+#ifdef __unix__
+  #ifdef __APPLE__
+    #define GAME_LIB_PATH "./libgambling-gladiator-dll.dylib"
+    #define TEMP_LIB_PATH_FORMAT "./libgambling-gladiator-dll_temp_%llu_%llu.dylib"
+  #else
+    #define GAME_LIB_PATH "./libgambling-gladiator-dll.so"
+    #define TEMP_LIB_PATH_FORMAT "./libgambling-gladiator-dll_temp_%llu_%llu.so"
+  #endif
+#endif
 
 typedef struct Game_Code {
   Lib lib;

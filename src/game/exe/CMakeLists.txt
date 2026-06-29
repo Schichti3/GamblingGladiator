@@ -2,7 +2,6 @@ SET(Name "gambling-gladiator")
 
 add_executable(${Name}
   main.c
-  dll_loader.c
 )
 
 target_include_directories(${Name}
@@ -20,6 +19,7 @@ endif()
 target_link_libraries(${Name} PRIVATE
     gambling-gladiator-client
     gambling-gladiator-server
+    os-utils
 	  PkgConfig::RAYLIB
 )
 

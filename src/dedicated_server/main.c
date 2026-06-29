@@ -1,6 +1,7 @@
 #include "server_tick.h"
 #include <server.h>
 #include <game_types.h>
+#include <os_utils.h>
 
 Player_Data player_data;
 
@@ -18,6 +19,8 @@ int main(void) {
     if (false) {
       server_tick(&player_data, 0.0);
     }
+
+    sleep_ms(1);
   }
   return 0;
 }

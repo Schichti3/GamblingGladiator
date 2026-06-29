@@ -24,6 +24,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(RAYLIB REQUIRED IMPORTED_TARGET raylib)
 pkg_check_modules(ENET REQUIRED IMPORTED_TARGET libenet)
 
+add_subdirectory(src/os_utils)
 add_subdirectory(src/network/thread)
 add_subdirectory(src/network/client)
 add_subdirectory(src/network/server)
