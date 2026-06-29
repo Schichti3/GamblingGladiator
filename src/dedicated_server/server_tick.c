@@ -3,7 +3,6 @@
 #include <net_com.h>
 
 void server_tick(Player_Data* player_data, float dt) {
-
   Msg msg = {
     .type = 2
   };
@@ -17,4 +16,8 @@ void server_tick(Player_Data* player_data, float dt) {
   msg.data_len = player_data->count * sizeof(Vector3);
 
   server_send(&msg);
+}
+
+void server_snapshot(float dt) {
+
 }

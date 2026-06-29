@@ -11,5 +11,6 @@ typedef struct Server_Tick {
 } Server_Tick;
 
 void server_tick(Player_Data* player_data, float dt);
+void server_snapshot(float dt);
 
 #endif //_SERVER_TICK_H_
