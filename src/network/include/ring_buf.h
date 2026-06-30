@@ -23,16 +23,17 @@
   static inline void name##_push(name *b, type val) {         \
     uint16_t next_tail_idx = b->tail_idx + 1;                 \
     if (next_tail_idx == name##_real_size) next_tail_idx = 0; \
-    if (next_tail_idx == b->head_idx) assert(!"ring_buf tail would reached head, ring buf is full"); \
+    if (next_tail_idx == b->head_idx) assert("ring_buf tail would reach head, ring buf is full"); \
     b->buf[b->tail_idx] = val;                                \
     b->tail_idx = next_tail_idx;                              \
   }                                                           \
                                                               \
   static inline bool name##_pop(name *b, type *dst) {         \
     if (b->head_idx == b->tail_idx) return false;             \
+    uint16_t next_head_idx = b->head_idx + 1;                 \
+    if (next_head_idx == name##_real_size) next_head_idx = 0; \
     *dst = b->buf[b->head_idx];                               \
-    ++b->head_idx;                                            \
-    if ( b->head_idx == name##_real_size) b->head_idx = 0;    \
+    b->head_idx = next_head_idx;                              \
     return true;                                              \
   }
 

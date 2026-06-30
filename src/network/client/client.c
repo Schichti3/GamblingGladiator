@@ -15,6 +15,8 @@
 
 #include <ring_buf.h>
 
+#include <os_utils.h>
+
 Client_Config* client_config;
 
 static ENetHost* client;
@@ -23,7 +25,7 @@ static ENetPeer* server;
 static atomic_bool mainloop_running;
 static Thread_Handle mainloop_thread_handle;
 
-STANDARD_RING_BUF_IMPL(Msg_Buf, Msg, 128)
+STANDARD_RING_BUF_IMPL(Msg_Buf, Msg, 1024)
 static Msg_Buf msg_buf;
 static pthread_mutex_t msg_buf_lock;
 
@@ -79,6 +81,7 @@ Error_Code client_send(Msg* msg) {
   ENetPacket* packet = enet_packet_create(msg, sizeof(Msg), ENET_PACKET_FLAG_RELIABLE);
   int res = enet_peer_send(server, 0, packet);
   enet_host_flush(client);
+  enet_packet_destroy(packet);
   if (res == 0) {
     return ALL_GOOD;
   } else {
@@ -91,16 +94,18 @@ static void* mainloop(void* args) {
   ENetEvent event;
   Msg msg;
   while (mainloop_running) {
-    if (enet_host_service(client, &event, 1000) > 0) {
+    if (enet_host_service(client, &event, 0) > 0) {
       switch(event.type) {
         case ENET_EVENT_TYPE_CONNECT:
           printf("Connected to server\n");
           break;
         case ENET_EVENT_TYPE_RECEIVE:
           packet_to_msg(&msg, event.packet);
+          enet_packet_destroy(event.packet);
           pthread_mutex_lock(&msg_buf_lock);
           Msg_Buf_push(&msg_buf, msg);
           pthread_mutex_unlock(&msg_buf_lock);
+          printf("msg received, type = %d\n", msg.type);
           break;
         case ENET_EVENT_TYPE_DISCONNECT:
           break;
@@ -109,6 +114,7 @@ static void* mainloop(void* args) {
           break;
       }
     }
+    sleep_ms(1);
   }
   enet_peer_disconnect(server, 0);
   enet_peer_reset(server);

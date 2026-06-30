@@ -10,12 +10,13 @@
 #include <thread.h>
 #include <ring_buf.h>
 #include <stdlib.h>
+#include <os_utils.h>
 
 Server_Config* server_config;
 
 static ENetHost* server;
 static ENetPeer** clients;
-static uint16_t client_count;
+static uint16_t next_client_id = 1;
 
 static atomic_bool mainloop_running;
 static Thread_Handle mainloop_thread_handle;
@@ -82,15 +83,17 @@ static void log_client_disconnected(ENetEvent* event) {
 
 Error_Code server_send(Msg* msg) {
   if (!server) return SERVER_SEND_FAILED_NO_SERVER;
-  ENetPeer* client = clients[msg->client_id]; //could cause access violation if client_id is not in bounds of clients
+  ENetPeer* client = clients[msg->client_id - 1]; //could cause access violation if client_id is not in bounds of clients
   if (!client) return SERVER_SEND_FAILED_NO_VALID_CLIENT_ID;
   ENetPacket* packet = enet_packet_create(msg, sizeof(Msg), ENET_PACKET_FLAG_RELIABLE);
   int res = enet_peer_send(client, 0, packet);
   enet_host_flush(server);
+  // enet_packet_destroy(packet);
   if (res == 0) {
+    printf("server_send, ALL_GOOD\n");
     return ALL_GOOD;
   } else {
-    return CLIENT_SEND_FAILED;
+    return SERVER_SEND_FAILED;
   }
 }
 
@@ -99,6 +102,7 @@ Error_Code server_broadcast(Msg* msg) {
   ENetPacket* packet = enet_packet_create(msg, sizeof(Msg), ENET_PACKET_FLAG_RELIABLE);
   enet_host_broadcast(server, 0, packet);
   enet_host_flush(server);
+  // enet_packet_destroy(packet);
   return ALL_GOOD;
 }
 
@@ -107,23 +111,26 @@ static void* mainloop(void* args) {
   ENetEvent event;
   Msg msg;
   while (mainloop_running) {
-    if (enet_host_service(server, &event, 1000) > 0) {
+    if (enet_host_service(server, &event, 0) > 0) {
       switch(event.type) {
         case ENET_EVENT_TYPE_CONNECT:
           log_client_connected(&event);
           printf("Connected to server\n");
-          msg.client_id = client_count++;
-          clients[msg.client_id] = event.peer;
+          msg.client_id = next_client_id++;
+          clients[msg.client_id - 1] = event.peer;
           msg.type = 99; //TODO should be changed
-          pthread_mutex_lock(&msg_buf_lock);
-          Msg_Buf_push(&msg_buf, msg);
-          pthread_mutex_unlock(&msg_buf_lock);
+          server_send(&msg);
+          // pthread_mutex_lock(&msg_buf_lock);
+          // Msg_Buf_push(&msg_buf, msg);
+          // pthread_mutex_unlock(&msg_buf_lock);
           break;
         case ENET_EVENT_TYPE_RECEIVE:
           packet_to_msg(&msg, event.packet);
+          enet_packet_destroy(event.packet);
           pthread_mutex_lock(&msg_buf_lock);
           Msg_Buf_push(&msg_buf, msg);
           pthread_mutex_unlock(&msg_buf_lock);
+          printf("msg received, type = %d\n", msg.type);
           break;
         case ENET_EVENT_TYPE_DISCONNECT:
           log_client_disconnected(&event);
@@ -132,6 +139,7 @@ static void* mainloop(void* args) {
           break;
       }
     }
+    sleep_ms(1);
   }
 
   enet_host_destroy(server);
@@ -162,7 +170,7 @@ Error_Code server_start_mainloop(void) {
 Error_Code server_stop_mainloop(void) {
   atomic_store(&mainloop_running, false);
   if (thread_join(mainloop_thread_handle) != THREAD_SUCCESS) {
-    return CLIENT_MAINLOOP_STOP_FAILED;
+    return SERVER_MAINLOOP_STOP_FAILED;
   }
 
   return ALL_GOOD;

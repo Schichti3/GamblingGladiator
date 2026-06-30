@@ -8,7 +8,7 @@
 #define A_BIT (1 << 2)
 #define D_BIT (1 << 3)
 
-void player_tick(float dt) {
+void player_tick(uint16_t client_id, float dt) {
   (void)dt;
   Player_Tick tick = {0};
   for (int key = GetKeyPressed(); key != 0; key = GetKeyPressed()) {
@@ -31,7 +31,8 @@ void player_tick(float dt) {
 
   Msg msg = {
     .type = 1,
-    .data_len = sizeof(Player_Tick)
+    .data_len = sizeof(Player_Tick),
+    .client_id = client_id
   };
   memcpy(&msg.data, &tick, sizeof(Player_Tick));
 

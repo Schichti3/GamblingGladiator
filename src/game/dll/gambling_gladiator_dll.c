@@ -7,6 +7,7 @@
 #include <player_tick.h>
 #include <game_renderer.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static double tick_dt;
 static double tick_dt_accumulator;
@@ -46,21 +47,25 @@ void game_update(Game_State* game_state) {
   float dt = GetFrameTime();
 
   if (client_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
+    printf("fetching msgs (msg_count = %d)\n", msg_count);
     for (int i = 0; i < msg_count; i++) {
-      if (msgs[i].type == 100) {
+      printf("msg.type = %d\n", msgs[i].type);
+      if (msgs[i].type == 99) {
         client_id = msgs[i].client_id;
+        printf("client_id = %d\n", msgs[i].client_id);
       }
       if (msgs[i].type == 2) {
         Vector3* posis = malloc(msgs[i].data_len);
-        memcpy(posis, msgs[i].data, 1);
+        memcpy(posis, msgs[i].data, msgs[i].data_len);
         game_state->pos = posis[client_id];
+        free(posis);
       }
     }
   }
 
   tick_dt_accumulator += dt;
   while (tick_dt_accumulator >= tick_dt) {
-    player_tick(tick_dt);
+    player_tick(client_id, tick_dt);
     tick_dt_accumulator -= tick_dt;
   }
 

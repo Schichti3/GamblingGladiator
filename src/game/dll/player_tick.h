@@ -8,6 +8,6 @@ typedef struct Player_Tick {
   uint16_t mouse_state; //bitmap
 } Player_Tick;
 
-void player_tick(float dt);
+void player_tick(uint16_t client_id, float dt);
 
 #endif //_PLAYER_TICK_H_

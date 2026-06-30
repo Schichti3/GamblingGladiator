@@ -4,7 +4,8 @@
 
 void server_tick(Player_Data* player_data, float dt) {
   Msg msg = {
-    .type = 2
+    .type = 2,
+    .client_id = 0
   };
 
   int offset = 0;
@@ -15,7 +16,7 @@ void server_tick(Player_Data* player_data, float dt) {
 
   msg.data_len = player_data->count * sizeof(Vector3);
 
-  server_send(&msg);
+  server_broadcast(&msg);
 }
 
 void server_snapshot(float dt) {

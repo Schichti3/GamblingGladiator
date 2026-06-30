@@ -24,11 +24,11 @@ int main(void) {
     float dt = time_now_ms();
     if (server_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
       for (int i = 0; i < msg_count; i++) {
-        if (msgs[i].type == 99) {
-          player_data.players[player_data.count].pos.x = 0;
-          player_data.players[player_data.count].pos.y = 0;
-          player_data.players[player_data.count].pos.z = 0;
-          player_data.players[player_data.count].vel = 5;
+        if (msgs[i].type == 1) {
+          player_data.players[msgs[i].client_id - 1].pos.x = 0;
+          player_data.players[msgs[i].client_id - 1].pos.y = 0;
+          player_data.players[msgs[i].client_id - 1].pos.z = 0;
+          player_data.players[msgs[i].client_id - 1].vel = 5;
           player_data.count++;
         }
       }
