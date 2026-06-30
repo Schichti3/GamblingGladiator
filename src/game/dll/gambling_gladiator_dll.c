@@ -6,6 +6,7 @@
 #include <string.h>
 #include <player_tick.h>
 #include <game_renderer.h>
+#include <stdlib.h>
 
 static double tick_dt;
 static double tick_dt_accumulator;
@@ -13,6 +14,8 @@ static double tick_dt_accumulator;
 #define MAX_MSG_COUNT 128
 static Msg msgs[MAX_MSG_COUNT];
 static uint16_t msg_count;
+
+static uint16_t client_id;
 
 void game_init(Game_State* game_state) {
   (void)game_state;
@@ -43,6 +46,16 @@ void game_update(Game_State* game_state) {
   float dt = GetFrameTime();
 
   if (client_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
+    for (int i = 0; i < msg_count; i++) {
+      if (msgs[i].type == 100) {
+        client_id = msgs[i].client_id;
+      }
+      if (msgs[i].type == 2) {
+        Vector3* posis = malloc(msgs[i].data_len);
+        memcpy(posis, msgs[i].data, 1);
+        game_state->pos = posis[client_id];
+      }
+    }
   }
 
   tick_dt_accumulator += dt;

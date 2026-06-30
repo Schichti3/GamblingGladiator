@@ -15,6 +15,7 @@ Server_Config* server_config;
 
 static ENetHost* server;
 static ENetPeer** clients;
+static uint16_t client_count;
 
 static atomic_bool mainloop_running;
 static Thread_Handle mainloop_thread_handle;
@@ -111,6 +112,12 @@ static void* mainloop(void* args) {
         case ENET_EVENT_TYPE_CONNECT:
           log_client_connected(&event);
           printf("Connected to server\n");
+          msg.client_id = client_count++;
+          clients[msg.client_id] = event.peer;
+          msg.type = 99; //TODO should be changed
+          pthread_mutex_lock(&msg_buf_lock);
+          Msg_Buf_push(&msg_buf, msg);
+          pthread_mutex_unlock(&msg_buf_lock);
           break;
         case ENET_EVENT_TYPE_RECEIVE:
           packet_to_msg(&msg, event.packet);

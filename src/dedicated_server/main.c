@@ -23,7 +23,15 @@ int main(void) {
   while (1) {
     float dt = time_now_ms();
     if (server_fetch_msgs(msgs, &msg_count, MAX_MSG_COUNT)) {
-
+      for (int i = 0; i < msg_count; i++) {
+        if (msgs[i].type == 99) {
+          player_data.players[player_data.count].pos.x = 0;
+          player_data.players[player_data.count].pos.y = 0;
+          player_data.players[player_data.count].pos.z = 0;
+          player_data.players[player_data.count].vel = 5;
+          player_data.count++;
+        }
+      }
     }
 
     tick_dt_accumulator += dt;

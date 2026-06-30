@@ -5,7 +5,8 @@
 #include <raylib.h>
 
 typedef struct Player {
-  Vector3 pos;
+  Vector3  pos;
+  uint32_t vel;
 } Player;
 
 typedef struct Player_Data {
